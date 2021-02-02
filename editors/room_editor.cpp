@@ -12,6 +12,9 @@ RoomEditor::RoomEditor(QWidget *parent) : QMainWindow(parent), ui(new Ui::RoomEd
     setCentralWidget(roomEditorGraphicsView);
     // Initialize Tile Picker UI elements
     tilePickerDockWidget = new QDockWidget(tr("Tile Picker"), this);
+    QDockWidget::DockWidgetFeatures dockWidgetFeatures = (tilePickerDockWidget->features() & ~QDockWidget::DockWidgetClosable);
+    tilePickerDockWidget->setFeatures(dockWidgetFeatures);
+    tilePickerDockWidget->setMinimumWidth(256);
     tilePickerGraphicsScene = new QGraphicsScene();
     tilePickerGraphicsScene->setBackgroundBrush(QBrush(Qt::black));
     tilePickerGraphicsView = new QGraphicsView(tilePickerGraphicsScene, tilePickerDockWidget);
@@ -19,11 +22,9 @@ RoomEditor::RoomEditor(QWidget *parent) : QMainWindow(parent), ui(new Ui::RoomEd
     addDockWidget(Qt::RightDockWidgetArea, tilePickerDockWidget);
     // Initialize Room Info UI elements
     roomInfoDockWidget = new QDockWidget(tr("Room Info"), this);
+    roomInfoDockWidget->setFeatures(dockWidgetFeatures);
+    roomInfoDockWidget->setMinimumWidth(256);
     addDockWidget(Qt::RightDockWidgetArea, roomInfoDockWidget);
-    
-    BankedAddress temp = ROM_ADDRESS_COMMON_TILE_GRAPHICS;
-    BankedAddress temp2 = ROM_ADDRESS_COMMON_TILE_TABLE;
-    return;
 }
 
 RoomEditor::~RoomEditor()

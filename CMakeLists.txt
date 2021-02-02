@@ -32,6 +32,9 @@ set(TS_FILES Torizo_en_US.ts)
 set(PROJECT_SOURCES
         # Root project files
         main.cpp
+        mainwindow.cpp
+        mainwindow.h
+        mainwindow.ui
         
         # Editors
         editors/room_editor.cpp

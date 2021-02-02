@@ -1,3 +1,5 @@
 #include "rom_variables.h"
 
-QByteArray LoadedROM;
+QString LoadedROMPath;
+QByteArray ROMHeader;
+QByteArray ROMData;

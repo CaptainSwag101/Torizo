@@ -2,7 +2,10 @@
 #define ROM_VARIABLES_H
 
 #include <QByteArray>
+#include <QString>
 
-extern QByteArray LoadedROM;
+extern QString LoadedROMPath;
+extern QByteArray ROMHeader;
+extern QByteArray ROMData;
 
 #endif // ROM_VARIABLES_H
