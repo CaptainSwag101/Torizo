@@ -6,27 +6,25 @@ BankedAddress::BankedAddress()
     Bank = 0;
 }
 
-BankedAddress::BankedAddress(uint_fast8_t bank, uint_fast16_t offset)
+BankedAddress::BankedAddress(uchar bank, ushort offset)
 {
     Offset = offset;
     Bank = bank;
 }
 
-uint_fast32_t BankedAddress::ToPointer()
+BankedAddress::BankedAddress(uint pointer)
 {
-    uint_fast32_t result = ((Bank % 0x80) * 0x8000) + (Offset % 0x8000);
-    return result;
+    Bank = (pointer / 0x8000);
+    if (Bank < 0x80)
+        Bank += 0x80;
+
+    Offset = (ushort)(pointer - (Bank * 0x8000));
+    if (Offset < 0x8000)
+        Offset += 0x8000;
 }
 
-BankedAddress BankedAddress::FromPointer(uint_fast32_t pointer)
+uint BankedAddress::ToPointer() const
 {
-    uint_fast8_t bank = (pointer / 0x8000);
-    if (bank < 0x80)
-        bank += 0x80;
-
-    uint_fast16_t offset = (uint_fast16_t)(pointer - (bank * 0x8000));
-    if (offset < 0x8000)
-        offset += 0x8000;
-
-    return BankedAddress(bank, offset);
+    uint result = ((Bank % 0x80) * 0x8000) + (Offset % 0x8000);
+    return result;
 }

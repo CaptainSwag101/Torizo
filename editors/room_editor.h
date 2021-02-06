@@ -1,9 +1,10 @@
 #ifndef ROOMEDITOR_H
 #define ROOMEDITOR_H
 
-#include "globals/graphics_constants.h"
-#include "globals/rom_constants.h"
-#include "globals/rom_variables.h"
+#include "../globals/graphics_constants.h"
+#include "../globals/rom_constants.h"
+#include "../globals/rom_variables.h"
+#include "../rom_utils/tileset.h"
 
 #include <QMainWindow>
 #include <QBrush>
@@ -11,7 +12,9 @@
 #include <QDockWidget>
 #include <QGraphicsView>
 #include <QGraphicsScene>
+#include <QGraphicsPixmapItem>
 #include <QImage>
+#include <QRgb>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class RoomEditor; }

@@ -7,26 +7,26 @@ QByteArray DecompressData(QByteArray source, int maxDataSize)
     QDataStream stream(source);
     stream.setByteOrder(QDataStream::LittleEndian);
 
-    int_fast64_t bytesWritten = 0;
+    long bytesWritten = 0;
     while (bytesWritten < maxDataSize && !stream.atEnd())
     {
-        int_fast64_t iterationPos = stream.device()->pos();
+        long iterationPos = stream.device()->pos();
 
-        uint_fast8_t raw;
+        uchar raw;
         stream >> raw;
 
         if (raw == 0xFF)    // Termination code
             break;
 
-        uint_fast8_t cmd = (raw & 0b11100000) >> 5;
-        uint_fast16_t val = raw & 0b00011111;
+        uchar cmd = (raw & 0b11100000) >> 5;
+        ushort val = raw & 0b00011111;
 
         if (cmd == 7)   // Extended command
         {
             cmd = val >> 2;
-            uint_fast8_t raw2;
+            uchar raw2;
             stream >> raw2;
-            uint_fast16_t val2 = ((val & 0b00000011) << 8) | raw2;
+            ushort val2 = ((val & 0b00000011) << 8) | raw2;
             val = val2;
         }
 
@@ -35,10 +35,10 @@ QByteArray DecompressData(QByteArray source, int maxDataSize)
         case 0: // Direct Copy
         {
             // Copy (val + 1) bytes to the output
-            int_fast64_t curPos = stream.device()->pos();
-            for (uint_fast16_t b = 0; b < (val + 1); ++b)
+            long curPos = stream.device()->pos();
+            for (ushort b = 0; b < (val + 1); ++b)
             {
-                uint_fast8_t byte;
+                uchar byte;
                 stream >> byte;
                 output.append(byte);
                 ++bytesWritten;
@@ -51,10 +51,10 @@ QByteArray DecompressData(QByteArray source, int maxDataSize)
         case 1: // Byte Fill
         {
             // Writes the next byte (val + 1) bytes deep into the output
-            int_fast64_t curPos = stream.device()->pos();
-            uint_fast8_t fill;
+            long curPos = stream.device()->pos();
+            uchar fill;
             stream >> fill;
-            for (uint_fast16_t b = 0; b < (val + 1); ++b)
+            for (ushort b = 0; b < (val + 1); ++b)
             {
                 output.append(fill);
                 ++bytesWritten;
@@ -67,12 +67,12 @@ QByteArray DecompressData(QByteArray source, int maxDataSize)
         case 2: // Word Fill
         {
             // Writes the next word (val + 1) bytes deep into the output
-            int_fast64_t curPos = stream.device()->pos();
-            uint_fast8_t fill1;
-            uint_fast8_t fill2;
+            long curPos = stream.device()->pos();
+            uchar fill1;
+            uchar fill2;
             stream >> fill1;
             stream >> fill2;
-            for (uint_fast16_t b = 0; b < (val + 1); ++b)
+            for (ushort b = 0; b < (val + 1); ++b)
             {
                 output.append(fill1);
                 ++bytesWritten;
@@ -93,10 +93,10 @@ QByteArray DecompressData(QByteArray source, int maxDataSize)
         {
             // Writes the next byte to the output, then increments that byte by 1
             // and writes it again, etc. Writes (val + 1) times.
-            int_fast64_t curPos = stream.device()->pos();
-            uint_fast8_t fill;
+            long curPos = stream.device()->pos();
+            uchar fill;
             stream >> fill;
-            for (uint_fast16_t b = 0; b < (val + 1); ++b)
+            for (ushort b = 0; b < (val + 1); ++b)
             {
                 output.append(fill++);
                 ++bytesWritten;
@@ -109,10 +109,10 @@ QByteArray DecompressData(QByteArray source, int maxDataSize)
         case 4: // Library Copy
         {
             // Copies (val + 1) bytes from the output address in the next two bytes
-            int_fast64_t curPos = stream.device()->pos();
-            uint_fast16_t libraryAddr;
+            long curPos = stream.device()->pos();
+            ushort libraryAddr;
             stream >> libraryAddr;
-            for (uint_fast16_t b = 0; b < (val + 1); ++b)
+            for (ushort b = 0; b < (val + 1); ++b)
             {
                 output.append(output.at(libraryAddr + b));
                 ++bytesWritten;
@@ -125,10 +125,10 @@ QByteArray DecompressData(QByteArray source, int maxDataSize)
         case 5: // XOR Copy
         {
             // Similar to Library Copy, but the copied data is eXclusive ORed with 0xFF
-            int_fast64_t curPos = stream.device()->pos();
-            uint_fast16_t libraryAddr;
+            long curPos = stream.device()->pos();
+            ushort libraryAddr;
             stream >> libraryAddr;
-            for (uint_fast16_t b = 0; b < (val + 1); ++b)
+            for (ushort b = 0; b < (val + 1); ++b)
             {
                 output.append(output.at(libraryAddr + b) ^ 0xFF);
                 ++bytesWritten;
@@ -142,11 +142,11 @@ QByteArray DecompressData(QByteArray source, int maxDataSize)
         {
             // Subtracts the next byte from the current output length
             // and copies (val + 1) bytes from the output. Can copy through current byte.
-            int_fast64_t curPos = stream.device()->pos();
-            uint_fast8_t minus;
+            long curPos = stream.device()->pos();
+            uchar minus;
             stream >> minus;
             int outputOffset = output.size() - minus;
-            for (uint_fast16_t b = 0; b < (val + 1); ++b)
+            for (ushort b = 0; b < (val + 1); ++b)
             {
                 output.append(output.at(outputOffset + b));
                 ++bytesWritten;

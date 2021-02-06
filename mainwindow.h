@@ -1,8 +1,13 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "rom_utils/tileset.h"
+
 #include <QMainWindow>
+#include <QFile>
+#include <QFileDialog>
 #include <QList>
+#include <QMessageBox>
 #include <QWidget>
 
 namespace Ui {
@@ -16,9 +21,11 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void OpenROM(QString romPath);
     
 private slots:
     void on_roomEditorButton_clicked();
+    void on_action_Open_ROM_triggered();
     
 private:
     Ui::MainWindow *ui;

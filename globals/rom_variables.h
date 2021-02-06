@@ -2,6 +2,8 @@
 #define ROM_VARIABLES_H
 
 #include <QByteArray>
+#include <QList>
+#include <QMap>
 #include <QString>
 
 extern QString LoadedROMPath;
