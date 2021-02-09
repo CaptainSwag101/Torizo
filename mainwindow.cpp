@@ -77,7 +77,7 @@ void MainWindow::OpenROM(QString romPath)
     
     // Import all relevant data from ROM
     LoadTilesets();
-    
+    LoadRooms();
     
     
     // Enable editor buttons once a ROM is loaded

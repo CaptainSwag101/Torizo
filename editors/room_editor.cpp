@@ -5,34 +5,100 @@ RoomEditor::RoomEditor(QWidget *parent) : QMainWindow(parent), ui(new Ui::RoomEd
 {
     ui->setupUi(this);
     
-    // Initialize Room Editor UI elements
+    // Initialize UI elements
+    InitRoomEditor();
+    InitBlockPicker();
+    InitRoomInfo();
+    
+    // Populate UI elements after initialization is complete
+    // This specific order is important because InitRoomInfo sets the
+    // starting room and state, which PopulateBlockPicker uses to
+    // populate its tileset and block graphics, which PopulateRoomEditor uses
+    // to populate the graphics for the loaded room data.
+    PopulateBlockPicker();
+    PopulateRoomEditor();
+}
+
+RoomEditor::~RoomEditor()
+{
+    delete ui;
+}
+
+/// Initialize Room Editor UI elements.
+void RoomEditor::InitRoomEditor()
+{
     roomEditorGraphicsScene = new QGraphicsScene();
     roomEditorGraphicsScene->setBackgroundBrush(QBrush(Qt::black));
     roomEditorGraphicsView = new QGraphicsView(roomEditorGraphicsScene);
+    
     setCentralWidget(roomEditorGraphicsView);
-    // Initialize Tile Picker UI elements
-    tilePickerDockWidget = new QDockWidget(tr("Tile Picker"), this);
-    QDockWidget::DockWidgetFeatures dockWidgetFeatures = (tilePickerDockWidget->features() & ~QDockWidget::DockWidgetClosable);
-    tilePickerDockWidget->setFeatures(dockWidgetFeatures);
-    tilePickerDockWidget->setMinimumWidth(256);
-    tilePickerGraphicsScene = new QGraphicsScene();
-    tilePickerGraphicsScene->setBackgroundBrush(QBrush(Qt::black));
-    tilePickerGraphicsView = new QGraphicsView(tilePickerGraphicsScene, tilePickerDockWidget);
-    tilePickerDockWidget->setWidget(tilePickerGraphicsView);
-    addDockWidget(Qt::RightDockWidgetArea, tilePickerDockWidget);
-    // Initialize Room Info UI elements
+}
+
+/// Initialize Block Picker UI elements.
+void RoomEditor::InitBlockPicker()
+{
+    blockPickerDockWidget = new QDockWidget(tr("Block Picker"), this);
+    QDockWidget::DockWidgetFeatures dockWidgetFeatures = (blockPickerDockWidget->features() & ~QDockWidget::DockWidgetClosable);
+    blockPickerDockWidget->setFeatures(dockWidgetFeatures);
+    QStyle *dockWidgetStyle = blockPickerDockWidget->style();
+    int dockWidgetWidth = dockWidgetStyle->pixelMetric(QStyle::PM_DockWidgetFrameWidth);
+    int titleBarHeight = dockWidgetStyle->pixelMetric(QStyle::PM_TitleBarHeight);
+    int titleBarMargin = blockPickerDockWidget->style()->pixelMetric(QStyle::PM_DockWidgetTitleMargin);
+    blockPickerDockWidget->setMinimumWidth(32 * PIXELS_PER_BLOCK + dockWidgetWidth);
+    blockPickerDockWidget->setMinimumHeight(32 * PIXELS_PER_BLOCK + titleBarHeight + titleBarMargin);
+    blockPickerDockWidget->size() = blockPickerDockWidget->minimumSize();
+    blockPickerGraphicsScene = new QGraphicsScene();
+    blockPickerGraphicsScene->setBackgroundBrush(QBrush(Qt::black));
+    blockPickerGraphicsView = new QGraphicsView(blockPickerGraphicsScene, blockPickerDockWidget);
+    blockPickerDockWidget->setWidget(blockPickerGraphicsView);
+    
+    addDockWidget(Qt::RightDockWidgetArea, blockPickerDockWidget);
+}
+
+/// Initialize Room Info UI elements.
+void RoomEditor::InitRoomInfo()
+{
     roomInfoDockWidget = new QDockWidget(tr("Room Info"), this);
+    QDockWidget::DockWidgetFeatures dockWidgetFeatures = (roomInfoDockWidget->features() & ~QDockWidget::DockWidgetClosable);
     roomInfoDockWidget->setFeatures(dockWidgetFeatures);
     roomInfoDockWidget->setMinimumWidth(256);
+    
+    // Setup the comboboxes
+    roomInfoAddressComboBox = new QComboBox();
+    // Generate the list of room address strings
+    QStringList roomAddressStrings;
+    for (ushort &address : GlobalRooms.keys())
+    {
+        roomAddressStrings.append(QString::number(address, 16).toUpper());
+    }
+    roomInfoAddressComboBox->addItems(roomAddressStrings);
+    connect(roomInfoAddressComboBox, &QComboBox::currentIndexChanged, this, &RoomEditor::roomInfoAddressComboBox_currentIndexChanged);
+    // Set the currentRoom variable
+    currentRoom = GlobalRooms.values().at(0);
+    
+    // Setup the frame and layout that holds the comboboxes
+    QFrame *frame = new QFrame();
+    QFormLayout *layout = new QFormLayout();
+    layout->addRow(tr("Room Address:"), roomInfoAddressComboBox);
+    frame->setLayout(layout);
+    roomInfoDockWidget->setWidget(frame);
+    
     addDockWidget(Qt::RightDockWidgetArea, roomInfoDockWidget);
+}
+
+void RoomEditor::PopulateRoomEditor()
+{
     
-    
-    
-    //TEMPORARY: Populate tilePicker
-    // Apply a temporary grayscale palette to the indexed pixel data
-    int tilesetId = 0;
+}
+
+void RoomEditor::PopulateBlockPicker()
+{
+    int tilesetId = currentRoom.States.at(0).GraphicSet;    // TEMPORARY
     QImage decodedTileGraphics = GlobalTileGraphics[tilesetId];
+    
     /*
+    // DEBUGGING ONLY!!!
+    // Apply a temporary grayscale palette to the indexed pixel data
     QVector<QRgb> grayscaleColorTable;
     for (int i = 0; i < 16; ++i)
     {
@@ -43,11 +109,10 @@ RoomEditor::RoomEditor(QWidget *parent) : QMainWindow(parent), ui(new Ui::RoomEd
         grayscaleColorTable.append(QRgb(color));
     }
     decodedTileGraphics.setColorTable(grayscaleColorTable);
-    */
 
-    // DEBUGGING ONLY!!!
-    //QImage converted = decodedTileGraphics.convertToFormat(QImage::Format_RGB32);
-    //converted.save("decodedTileGraphicsCppDebug.png");
+    QImage converted = decodedTileGraphics.convertToFormat(QImage::Format_RGB32);
+    converted.save("decodedTileGraphicsCppDebug.png");
+    */
 
     // Generate a color table from the palette
     QVector<QRgb> paletteColorTable;
@@ -60,16 +125,15 @@ RoomEditor::RoomEditor(QWidget *parent) : QMainWindow(parent), ui(new Ui::RoomEd
             paletteColorTable.append(SnesToPcColor(GlobalPalettes[tilesetId][palNum]));
     }
     
-    // Apply the new color table to the image
+    // Apply the color table to the image
     decodedTileGraphics.setColorTable(paletteColorTable);
     
-    
     // Reset the block picker & re-initialize graphics items
-    tilePickerGraphicsScene->clear();
+    blockPickerGraphicsScene->clear();
     int blockCount = 1024;
     int blocksWide = 32;  // number of blocks per line
     int blocksTall = blockCount / blocksWide;
-    tilePickerGraphicsScene->setSceneRect(0, 0, blocksWide * PIXELS_PER_BLOCK, blocksTall * PIXELS_PER_BLOCK);
+    blockPickerGraphicsScene->setSceneRect(0, 0, blocksWide * PIXELS_PER_BLOCK, blocksTall * PIXELS_PER_BLOCK);
     for (int blockNum = 0; blockNum < blockCount; ++blockNum)
     {
         // Get block image and cache it
@@ -77,7 +141,7 @@ RoomEditor::RoomEditor(QWidget *parent) : QMainWindow(parent), ui(new Ui::RoomEd
         blockImage.setColorTable(paletteColorTable);
 
         // Draw the block to the picker scene
-        QGraphicsPixmapItem *blockItem = tilePickerGraphicsScene->addPixmap(QPixmap::fromImage(blockImage));
+        QGraphicsPixmapItem *blockItem = blockPickerGraphicsScene->addPixmap(QPixmap::fromImage(blockImage));
         blockItem->setPos((blockNum % blocksWide) * PIXELS_PER_BLOCK, (blockNum / blocksWide) * PIXELS_PER_BLOCK);
 
         // DEBUGGING ONLY!!!
@@ -88,11 +152,16 @@ RoomEditor::RoomEditor(QWidget *parent) : QMainWindow(parent), ui(new Ui::RoomEd
 
         //convertedBlockImage.save("block" + QString::number(blockNum) + ".png");
     }
-    //blockPickerGraphicsView->update();
 }
 
-RoomEditor::~RoomEditor()
+void RoomEditor::roomInfoAddressComboBox_currentIndexChanged(int index)
 {
-    delete ui;
+    // Don't try to access an invalid room index
+    if (index < 0 || index >= GlobalRooms.values().size())
+        return;
+    
+    // Trigger the UI elements to repopulate
+    currentRoom = GlobalRooms.values().at(index);
+    PopulateBlockPicker();
+    PopulateRoomEditor();
 }
-

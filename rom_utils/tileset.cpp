@@ -1,9 +1,5 @@
 #include "tileset.h"
 
-QList<QByteArray> GlobalTileTables;
-QList<QImage> GlobalTileGraphics;
-QList<QList<ushort>> GlobalPalettes;
-
 void LoadTilesets()
 {
     // Reinitialize all tileset data

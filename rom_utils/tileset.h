@@ -10,10 +10,6 @@
 #include <QtGlobal>
 #include <QImage>
 
-extern QList<QByteArray> GlobalTileTables;
-extern QList<QImage> GlobalTileGraphics;
-extern QList<QList<ushort>> GlobalPalettes;
-
 void LoadTilesets();
 
 QImage DecodeBitplaneGraphics(QByteArray bitplaneGraphics, int bitsPerPixel);

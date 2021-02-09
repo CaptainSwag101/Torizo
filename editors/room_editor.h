@@ -9,7 +9,9 @@
 #include <QMainWindow>
 #include <QBrush>
 #include <QColor>
+#include <QComboBox>
 #include <QDockWidget>
+#include <QFormLayout>
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
@@ -25,22 +27,38 @@ class RoomEditor : public QMainWindow
     Q_OBJECT
     
 public:
+    /* Methods */
     RoomEditor(QWidget *parent = nullptr);
     ~RoomEditor();
+    /* Variables */
+    Room currentRoom;
+
+private slots:
+    void roomInfoAddressComboBox_currentIndexChanged(int index);
     
 private:
-    void OpenROM(QString romPath);
+    /* Methods */
+    // UI stuff
+    void InitRoomEditor();
+    void InitBlockPicker();
+    void InitRoomInfo();
+    void PopulateRoomEditor();
+    void PopulateBlockPicker();
     
+    /* Variables */
+    // UI stuff
     Ui::RoomEditor *ui;
     // Room Editor area
     QGraphicsView *roomEditorGraphicsView;
     QGraphicsScene *roomEditorGraphicsScene;
-    // Tile Picker area
-    QDockWidget *tilePickerDockWidget;
-    QGraphicsView *tilePickerGraphicsView;
-    QGraphicsScene *tilePickerGraphicsScene;
+    // Block Picker area
+    QDockWidget *blockPickerDockWidget;
+    QGraphicsView *blockPickerGraphicsView;
+    QGraphicsScene *blockPickerGraphicsScene;
     // Room Info area
     QDockWidget *roomInfoDockWidget;
+    QComboBox *roomInfoAddressComboBox;
+    QComboBox *roomInfoStateComboBox;
     
 };
 #endif // ROOMEDITOR_H

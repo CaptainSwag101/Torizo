@@ -39,6 +39,8 @@ set(PROJECT_SOURCES
         rom_utils/bankedaddress.h
         rom_utils/compression.cpp
         rom_utils/compression.h
+        rom_utils/room.cpp
+        rom_utils/room.h
         rom_utils/tileset.cpp
         rom_utils/tileset.h
         

@@ -93,13 +93,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editors/room_editor.cpp" line="14"/>
-        <source>Tile Picker</source>
+        <location filename="editors/room_editor.cpp" line="40"/>
+        <source>Block Picker</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editors/room_editor.cpp" line="24"/>
+        <location filename="editors/room_editor.cpp" line="61"/>
         <source>Room Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editors/room_editor.cpp" line="82"/>
+        <source>Room Address:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
