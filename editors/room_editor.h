@@ -32,6 +32,8 @@ public:
     ~RoomEditor();
     /* Variables */
     Room currentRoom;
+    LevelData currentLevelData;
+    QList<QImage> currentBlockImages;
 
 private slots:
     void roomInfoAddressComboBox_currentIndexChanged(int index);

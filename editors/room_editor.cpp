@@ -88,7 +88,65 @@ void RoomEditor::InitRoomInfo()
 
 void RoomEditor::PopulateRoomEditor()
 {
+    // Clear out any leftover room data if we had a different one loaded
+    roomEditorGraphicsScene->clear();
+    roomEditorGraphicsView->update();
     
+    // Load the current state's LevelData into memory
+    currentLevelData = ReadLevel(currentRoom, 0);   // TEMPORARY!!!
+    
+    /* Populate the Room Editor with the current room's blocks */
+    // Populate tile layer 2 graphics
+    for (int i = 0; i < currentLevelData.TileLayer2.size(); ++i)
+    {
+        Block curBlock = currentLevelData.TileLayer2[i];
+
+        // Draw block ID text
+        //QGraphicsTextItem *text = new QGraphicsTextItem(QString::number(curBlock.BlockId));
+        //text->setFont(QFont("Noto Mono"));
+        //text->setPos((i % (currentRoom.Header.Width * BLOCKS_PER_ROOM)) * PIXELS_PER_BLOCK, (i / (currentRoom.Header.Width * BLOCKS_PER_ROOM)) * PIXELS_PER_BLOCK);
+        //layer2Group->addToGroup(text);
+
+        // Draw block
+        int sheet = curBlock.PatternByte % 4;
+        QImage blockImage = currentBlockImages[curBlock.BlockId + (0x100 * sheet)];
+
+        uchar orientation = (curBlock.PatternByte % 16) / 4;
+        bool xFlip = ((orientation & 1) > 0);
+        bool yFlip = ((orientation & 2) > 0);
+
+        blockImage = blockImage.mirrored(xFlip, yFlip);
+
+        QGraphicsItem *blockItem = new QGraphicsPixmapItem(QPixmap::fromImage(blockImage));
+        blockItem->setPos((i % (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK, (i / (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK);
+        roomEditorGraphicsScene->addItem(blockItem);
+    }
+    
+    // Populate tile layer 1 graphics
+    for (int i = 0; i < currentLevelData.TileLayer1.size(); ++i)
+    {
+        Block curBlock = currentLevelData.TileLayer1[i];
+
+        // Draw block ID text
+        //QGraphicsTextItem *text = new QGraphicsTextItem(QString::number(curBlock.BlockId));
+        //text->setFont(QFont("Noto Mono"));
+        //text->setPos((i % (currentRoom.Header.Width * BLOCKS_PER_ROOM)) * PIXELS_PER_BLOCK, (i / (currentRoom.Header.Width * BLOCKS_PER_ROOM)) * PIXELS_PER_BLOCK);
+        //layer1Group->addToGroup(text);
+
+        // Draw block
+        int sheet = curBlock.PatternByte % 4;
+        QImage blockImage = currentBlockImages[curBlock.BlockId + (0x100 * sheet)];
+
+        uchar orientation = (curBlock.PatternByte % 16) / 4;
+        bool xFlip = ((orientation & 1) > 0);
+        bool yFlip = ((orientation & 2) > 0);
+
+        blockImage = blockImage.mirrored(xFlip, yFlip);
+
+        QGraphicsItem *blockItem = new QGraphicsPixmapItem(QPixmap::fromImage(blockImage));
+        blockItem->setPos((i % (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK, (i / (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK);
+        roomEditorGraphicsScene->addItem(blockItem);
+    }
 }
 
 void RoomEditor::PopulateBlockPicker()
@@ -129,6 +187,7 @@ void RoomEditor::PopulateBlockPicker()
     decodedTileGraphics.setColorTable(paletteColorTable);
     
     // Reset the block picker & re-initialize graphics items
+    currentBlockImages.clear();
     blockPickerGraphicsScene->clear();
     int blockCount = 1024;
     int blocksWide = 32;  // number of blocks per line
@@ -139,6 +198,7 @@ void RoomEditor::PopulateBlockPicker()
         // Get block image and cache it
         QImage blockImage = GetImageForBlock(blockNum, GlobalTileTables[tilesetId], decodedTileGraphics);
         blockImage.setColorTable(paletteColorTable);
+        currentBlockImages.append(blockImage);
 
         // Draw the block to the picker scene
         QGraphicsPixmapItem *blockItem = blockPickerGraphicsScene->addPixmap(QPixmap::fromImage(blockImage));
