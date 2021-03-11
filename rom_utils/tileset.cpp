@@ -66,20 +66,20 @@ void ReadTilesetData(int graphicSetIndex, QByteArray &tileTable, QImage &tileGra
     ReadTilesetPointers(graphicSetIndex, tileTableAddress, tileGraphicsAddress, paletteAddress);
 
     // Read actual data from pointers
-    QByteArray compressedCommonTileTable = ROMData.mid(ROM_ADDRESS_COMMON_TILE_TABLE.ToPointer(), 0x1000);
-    QByteArray compressedUniqueTileTable = ROMData.mid(tileTableAddress.ToPointer(), 0x1000);
+    QByteArray compressedCommonTileTable = ROMData.mid(ROM_ADDRESS_COMMON_TILE_TABLE.ToPointer());
+    QByteArray compressedUniqueTileTable = ROMData.mid(tileTableAddress.ToPointer());
     tileTable.append(DecompressData(compressedCommonTileTable));
     tileTable.append(DecompressData(compressedUniqueTileTable));
 
-    QByteArray compressedCommonTileGraphics = ROMData.mid(ROM_ADDRESS_COMMON_TILE_GRAPHICS.ToPointer(), 0x8000);
-    QByteArray compressedUniqueTileGraphics = ROMData.mid(tileGraphicsAddress.ToPointer(), 0x8000);
+    QByteArray compressedCommonTileGraphics = ROMData.mid(ROM_ADDRESS_COMMON_TILE_GRAPHICS.ToPointer());
+    QByteArray compressedUniqueTileGraphics = ROMData.mid(tileGraphicsAddress.ToPointer());
     QByteArray combinedTileGraphics = QByteArray();
     combinedTileGraphics.append(DecompressData(compressedUniqueTileGraphics));
-    combinedTileGraphics.append(QByteArray(0x5000 - combinedTileGraphics.size(), 0));   // pad tile graphics with zeroes up to 0x5000
+    //combinedTileGraphics.append(QByteArray(0x5000 - combinedTileGraphics.size(), 0));   // pad tile graphics with zeroes up to 0x5000
     combinedTileGraphics.append(DecompressData(compressedCommonTileGraphics));
     tileGraphics = DecodeBitplaneGraphics(combinedTileGraphics, 4);
 
-    QByteArray compressedPalette = ROMData.mid(paletteAddress.ToPointer(), 0x800);
+    QByteArray compressedPalette = ROMData.mid(paletteAddress.ToPointer());
     QByteArray paletteData = DecompressData(compressedPalette);
 
     // Convert palette data from bytes to ushorts
