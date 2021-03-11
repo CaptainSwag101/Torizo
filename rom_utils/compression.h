@@ -5,17 +5,6 @@
 
 #include <QDataStream>
 
-enum CompressionMethod
-{
-    DirectCopy,
-    ByteFill,
-    WordFill,
-    SigmaFill,
-    LibraryCopy,
-    XorCopy,
-    MinusCopy
-};
-
 QByteArray DecompressData(QByteArray source, int maxDataSize = 0x10000);
 QByteArray CompressData(QByteArray source);
 

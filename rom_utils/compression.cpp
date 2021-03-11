@@ -21,7 +21,7 @@ QByteArray DecompressData(QByteArray source, int maxDataSize)
         uchar cmd = (raw & 0b11100000) >> 5;
         ushort val = raw & 0b00011111;
 
-        if (cmd == 7)   // Extended command
+        if (cmd == 0b111)   // Extended command
         {
             cmd = val >> 2;
             uchar raw2;
@@ -89,7 +89,7 @@ QByteArray DecompressData(QByteArray source, int maxDataSize)
             }
             break;
         }
-        case 3: // Sigma Fill
+        case 3: // Ascending Fill
         {
             // Writes the next byte to the output, then increments that byte by 1
             // and writes it again, etc. Writes (val + 1) times.
@@ -106,15 +106,15 @@ QByteArray DecompressData(QByteArray source, int maxDataSize)
             }
             break;
         }
-        case 4: // Library Copy
+        case 4: // Indirect Copy
         {
             // Copies (val + 1) bytes from the output address in the next two bytes
             long curPos = stream.device()->pos();
-            ushort libraryAddr;
-            stream >> libraryAddr;
+            ushort indirectAddr;
+            stream >> indirectAddr;
             for (ushort b = 0; b < (val + 1); ++b)
             {
-                output.append(output.at(libraryAddr + b));
+                output.append(output.at(indirectAddr + b));
                 ++bytesWritten;
 
                 if (bytesWritten >= maxDataSize)
@@ -122,9 +122,9 @@ QByteArray DecompressData(QByteArray source, int maxDataSize)
             }
             break;
         }
-        case 5: // XOR Copy
+        case 5: // Negated Indirect Copy
         {
-            // Similar to Library Copy, but the copied data is eXclusive ORed with 0xFF
+            // Similar to Indirect Copy, but the copied data is eXclusive ORed with 0xFF, negating it
             long curPos = stream.device()->pos();
             ushort libraryAddr;
             stream >> libraryAddr;
@@ -138,17 +138,34 @@ QByteArray DecompressData(QByteArray source, int maxDataSize)
             }
             break;
         }
-        case 6: // Minus Copy
+        case 6: // Sliding Dictionary
         {
-            // Subtracts the next byte from the current output length
-            // and copies (val + 1) bytes from the output. Can copy through current byte.
+            // Copies decompressed data beginning at 'reverseOffset' bytes before the current position,
+            // and copies (val + 1) bytes.
             long curPos = stream.device()->pos();
-            uchar minus;
-            stream >> minus;
-            int outputOffset = output.size() - minus;
+            uchar reverseOffset;
+            stream >> reverseOffset;
             for (ushort b = 0; b < (val + 1); ++b)
             {
-                output.append(output.at(outputOffset + b));
+                int outputOffset = output.size() - reverseOffset;
+                output.append(output.at(outputOffset));
+                ++bytesWritten;
+
+                if (bytesWritten >= maxDataSize)
+                    break;
+            }
+            break;
+        }
+        case 7: // Negated Sliding Dictionary
+        {
+            // Same as Sliding Dictionary, but copied data is eXclusive ORed with 0xFF, negating it
+            long curPos = stream.device()->pos();
+            uchar reverseOffset;
+            stream >> reverseOffset;
+            for (ushort b = 0; b < (val + 1); ++b)
+            {
+                int outputOffset = output.size() - reverseOffset;
+                output.append(output.at(outputOffset) ^ 0xFF);
                 ++bytesWritten;
 
                 if (bytesWritten >= maxDataSize)
