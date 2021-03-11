@@ -10,6 +10,7 @@ public:
     BankedAddress(uchar bank, ushort offset);
     BankedAddress(uint pointer);
     uint ToPointer() const;
+    bool Valid() const;
 
     ushort Offset;
     uchar Bank;

@@ -17,6 +17,7 @@
 #include <QGraphicsPixmapItem>
 #include <QImage>
 #include <QRgb>
+#include <QSlider>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class RoomEditor; }
@@ -33,10 +34,10 @@ public:
     /* Variables */
     Room currentRoom;
     LevelData currentLevelData;
-    QList<QImage> currentBlockImages;
 
 private slots:
     void roomInfoAddressComboBox_currentIndexChanged(int index);
+    void zoomSlider_valueChanged(int value);
     
 private:
     /* Methods */
@@ -44,8 +45,10 @@ private:
     void InitRoomEditor();
     void InitBlockPicker();
     void InitRoomInfo();
+    void InitStatusBar();
     void PopulateRoomEditor();
     void PopulateBlockPicker();
+    void PopulateBlockPickerDEBUG();
     
     /* Variables */
     // UI stuff
@@ -61,6 +64,8 @@ private:
     QDockWidget *roomInfoDockWidget;
     QComboBox *roomInfoAddressComboBox;
     QComboBox *roomInfoStateComboBox;
+    // Status bar area
+    QSlider *zoomSlider;
     
 };
 #endif // ROOMEDITOR_H

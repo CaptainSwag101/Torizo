@@ -163,49 +163,57 @@ LevelData ReadLevel(Room room, int stateIndex)
     uint levelDataPointer = state.LevelDataAddress.ToPointer();
 
     // Decompress level data
-    QByteArray compressedLevelData = ROMData.mid(levelDataPointer, 0xFFFF);
+    QByteArray compressedLevelData = ROMData.mid(levelDataPointer);
     QByteArray decompressedLevelData = DecompressData(compressedLevelData);
     QDataStream levelStream(decompressedLevelData);
     levelStream.setByteOrder(QDataStream::LittleEndian);
 
     LevelData result;
-    levelStream >> result.Header;
+    levelStream >> result.TileLayer1Size;
 
-    int tileCount = result.Header / 2;
+    int tileCount = result.TileLayer1Size / 2;
     int bytesRead = 0;
 
     // Read Layer 1 block data
     for (int i = 0; i < tileCount; ++i)
     {
-        Block b;
-        levelStream >> b.BlockId;
-        levelStream >> b.PatternByte;
-        result.TileLayer1.append(b);
+        ushort b;
+        levelStream >> b;
+        
+        Block block;
+        block.BlockNum = b;
+        block.XFlip = ((b >> 10) & 1);
+        block.YFlip = ((b >> 11) & 1);
+        block.BlockType = b >> 12;
+        
+        result.TileLayer1.append(block);
         bytesRead += 2;
     }
-
-    // If we haven't reached the end of level data, read BTS data
-    if (bytesRead + tileCount <= levelStream.device()->size())
+    
+    // Read BTS data
+    for (int i = 0; i < tileCount; ++i)
     {
-        for (int i = 0; i < tileCount; ++i)
-        {
-            uchar bts;
-            levelStream >> bts;
-            result.BtsData.append(bts);
-            ++bytesRead;
-        }
+        uchar bts;
+        levelStream >> bts;
+        result.BtsData.append(bts);
+        ++bytesRead;
     }
 
     // If we haven't reached the end of level data, read Layer 2 block data
-    long pos = levelStream.device()->pos();
-    if (bytesRead + (tileCount * 2) <= levelStream.device()->size())
+    if (bytesRead + (tileCount * 2) < levelStream.device()->size())
     {
         for (int i = 0; i < tileCount; ++i)
         {
-            Block b;
-            levelStream >> b.BlockId;
-            levelStream >> b.PatternByte;
-            result.TileLayer2.append(b);
+            ushort b;
+            levelStream >> b;
+            
+            Block block;
+            block.BlockNum = b;
+            block.XFlip = ((b >> 10) & 1);
+            block.YFlip = ((b >> 11) & 1);
+            block.BlockType = b >> 12;
+            
+            result.TileLayer2.append(block);
             bytesRead += 2;
         }
     }

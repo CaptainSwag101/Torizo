@@ -45,9 +45,9 @@ void LoadTilesets()
     }
 }
 
-void ReadTilesetPointers(int graphicSetIndex, BankedAddress &tTableAddress, BankedAddress &tGraphicsAddress, BankedAddress &paletteAddress)
+void ReadTilesetPointers(int tilesetIndex, BankedAddress &tTableAddress, BankedAddress &tGraphicsAddress, BankedAddress &paletteAddress)
 {
-    uint tilesetAddress = ROM_ADDRESS_TILESET_POINTER_LIST.ToPointer() + (graphicSetIndex * 9);
+    uint tilesetAddress = ROM_ADDRESS_TILESET_POINTER_LIST.ToPointer() + (tilesetIndex * 9);
 
     QDataStream stream(ROMData.mid(tilesetAddress, 9));
     stream.setByteOrder(QDataStream::LittleEndian);
@@ -59,11 +59,11 @@ void ReadTilesetPointers(int graphicSetIndex, BankedAddress &tTableAddress, Bank
     stream >> paletteAddress.Bank;
 }
 
-void ReadTilesetData(int graphicSetIndex, QByteArray &tileTable, QImage &tileGraphics, QList<ushort> &palette)
+void ReadTilesetData(int tilesetIndex, QByteArray &tileTable, QImage &tileGraphics, QList<ushort> &palette)
 {
     // First, read tileset pointers
     BankedAddress tileTableAddress, tileGraphicsAddress, paletteAddress;
-    ReadTilesetPointers(graphicSetIndex, tileTableAddress, tileGraphicsAddress, paletteAddress);
+    ReadTilesetPointers(tilesetIndex, tileTableAddress, tileGraphicsAddress, paletteAddress);
 
     // Read actual data from pointers
     QByteArray compressedCommonTileTable = ROMData.mid(ROM_ADDRESS_COMMON_TILE_TABLE.ToPointer());
@@ -75,7 +75,7 @@ void ReadTilesetData(int graphicSetIndex, QByteArray &tileTable, QImage &tileGra
     QByteArray compressedUniqueTileGraphics = ROMData.mid(tileGraphicsAddress.ToPointer());
     QByteArray combinedTileGraphics = QByteArray();
     combinedTileGraphics.append(DecompressData(compressedUniqueTileGraphics));
-    //combinedTileGraphics.append(QByteArray(0x5000 - combinedTileGraphics.size(), 0));   // pad tile graphics with zeroes up to 0x5000
+    combinedTileGraphics.append(QByteArray(0x5000 - combinedTileGraphics.size(), 0));   // pad tile graphics with zeroes up to 0x5000
     combinedTileGraphics.append(DecompressData(compressedCommonTileGraphics));
     tileGraphics = DecodeBitplaneGraphics(combinedTileGraphics, 4);
 
@@ -201,9 +201,9 @@ QImage GetImageForBlock(int blockNum, QByteArray tileTable, QImage tileGraphics)
     {
         ushort tileData = entry[e];
         ushort tileNum = (ushort)(tileData & 0x3FF);
-        bool xFlip = ((tileData & 0b0100000000000000) >> 14) == 1;
-        bool yFlip = ((tileData & 0b1000000000000000) >> 15) == 1;
-        uchar paletteBank = (uchar)((tileData & 0b0001110000000000) >> 10);
+        bool xFlip = ((tileData) >> 14) & 1;
+        bool yFlip = ((tileData) >> 15) & 1;
+        uchar paletteBank = (uchar)(tileData >> 10) & 7;
 
         QImage tileImage = tileGraphics.copy(0, PIXELS_PER_TILE * tileNum, PIXELS_PER_TILE, PIXELS_PER_TILE);
         tileImage = tileImage.mirrored(xFlip, yFlip);

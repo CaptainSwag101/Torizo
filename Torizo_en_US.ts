@@ -93,18 +93,26 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editors/room_editor.cpp" line="40"/>
+        <location filename="editors/room_editor.cpp" line="41"/>
         <source>Block Picker</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editors/room_editor.cpp" line="61"/>
+        <location filename="editors/room_editor.cpp" line="62"/>
         <source>Room Info</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editors/room_editor.cpp" line="82"/>
+        <location filename="editors/room_editor.cpp" line="83"/>
         <source>Room Address:</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TilesetViewer</name>
+    <message>
+        <location filename="editors/tileset_viewer.ui" line="16"/>
+        <source>MainWindow</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

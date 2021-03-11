@@ -27,6 +27,9 @@ set(PROJECT_SOURCES
         editors/room_editor.cpp
         editors/room_editor.h
         editors/room_editor.ui
+        editors/tileset_viewer.cpp
+        editors/tileset_viewer.h
+        editors/tileset_viewer.ui
         
         # Globals
         globals/graphics_constants.h

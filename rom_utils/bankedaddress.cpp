@@ -28,3 +28,8 @@ uint BankedAddress::ToPointer() const
     uint result = ((Bank % 0x80) * 0x8000) + (Offset % 0x8000);
     return result;
 }
+
+bool BankedAddress::Valid() const
+{
+    return (Bank >= 0x80 && Offset >= 0x8000);
+}

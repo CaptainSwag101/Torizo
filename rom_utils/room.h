@@ -6,12 +6,6 @@
 #include <QDataStream>
 #include <QList>
 
-struct Block
-{
-    uchar BlockId;
-    uchar PatternByte;
-};
-
 struct DoorData
 {
     ushort TargetRoomPointer;      // $8F pointer
@@ -31,9 +25,17 @@ struct PLM
     uchar Unknown;
 };
 
+struct Block
+{
+    ushort BlockNum : 10;
+    bool XFlip;
+    bool YFlip;
+    char BlockType : 4;
+};
+
 struct LevelData
 {
-    ushort Header;
+    ushort TileLayer1Size;
     QList<Block> TileLayer1;
     QByteArray BtsData;
     QList<Block> TileLayer2;

@@ -9,6 +9,7 @@ RoomEditor::RoomEditor(QWidget *parent) : QMainWindow(parent), ui(new Ui::RoomEd
     InitRoomEditor();
     InitBlockPicker();
     InitRoomInfo();
+    InitStatusBar();
     
     // Populate UI elements after initialization is complete
     // This specific order is important because InitRoomInfo sets the
@@ -86,6 +87,22 @@ void RoomEditor::InitRoomInfo()
     addDockWidget(Qt::RightDockWidgetArea, roomInfoDockWidget);
 }
 
+/// Initialize the status bar and its elements, like the zoom slider
+void RoomEditor::InitStatusBar()
+{
+    zoomSlider = new QSlider();
+    zoomSlider->setOrientation(Qt::Horizontal);
+    zoomSlider->setTickInterval(100);
+    zoomSlider->setTickPosition(QSlider::TicksBelow);
+    zoomSlider->setMinimum(100);
+    zoomSlider->setMaximum(400);
+    zoomSlider->setValue(100);
+    zoomSlider->setSingleStep(100);
+    zoomSlider->setPageStep(200);
+    connect(zoomSlider, &QSlider::valueChanged, this, &RoomEditor::zoomSlider_valueChanged);
+    ui->statusbar->addWidget(zoomSlider);
+}
+
 void RoomEditor::PopulateRoomEditor()
 {
     // Clear out any leftover room data if we had a different one loaded
@@ -93,33 +110,48 @@ void RoomEditor::PopulateRoomEditor()
     roomEditorGraphicsView->update();
     
     // Load the current state's LevelData into memory
-    currentLevelData = ReadLevel(currentRoom, 0);   // TEMPORARY!!!
+    currentLevelData = ReadLevel(currentRoom, 0);   // TEMPORARY, GET THIS FROM CURRENT ROOM STATE INSTEAD!
+    int tilesetId = currentRoom.States[0].GraphicSet;
     
-    /* Populate the Room Editor with the current room's blocks */
+    ////// Populate the Room Editor with the current room's blocks //////
+    
     // Populate tile layer 2 graphics
     for (int i = 0; i < currentLevelData.TileLayer2.size(); ++i)
     {
         Block curBlock = currentLevelData.TileLayer2[i];
 
-        // Draw block ID text
+        // DEBUG: Draw block ID text
         //QGraphicsTextItem *text = new QGraphicsTextItem(QString::number(curBlock.BlockId));
         //text->setFont(QFont("Noto Mono"));
         //text->setPos((i % (currentRoom.Header.Width * BLOCKS_PER_ROOM)) * PIXELS_PER_BLOCK, (i / (currentRoom.Header.Width * BLOCKS_PER_ROOM)) * PIXELS_PER_BLOCK);
         //layer2Group->addToGroup(text);
 
         // Draw block
-        int sheet = curBlock.PatternByte % 4;
-        QImage blockImage = currentBlockImages[curBlock.BlockId + (0x100 * sheet)];
+        QImage blockImage = GetImageForBlock(curBlock.BlockNum, GlobalTileTables[tilesetId], GlobalTileGraphics[tilesetId]);
 
-        uchar orientation = (curBlock.PatternByte % 16) / 4;
-        bool xFlip = ((orientation & 1) > 0);
-        bool yFlip = ((orientation & 2) > 0);
+        // Generate a color table from the palette
+        QList<QRgb> paletteColorTable;
+        for (int palNum = 0; palNum < GlobalPalettes[tilesetId].size(); ++palNum)
+        {
+            // Mask out the alpha for the first color in each bank, it's intended to be transparent
+            QRgb color = SnesToPcColor(GlobalPalettes[tilesetId][palNum]);
+            if (palNum % 16 == 0)
+                paletteColorTable.append(color & 0x00FFFFFF);
+            else
+                paletteColorTable.append(color);
+        }
+        
+        // Apply the color table to the image
+        blockImage.setColorTable(paletteColorTable);
+        
+        // Adjust x/y flipping
+        blockImage = blockImage.mirrored(curBlock.XFlip, curBlock.YFlip);
 
-        blockImage = blockImage.mirrored(xFlip, yFlip);
-
-        QGraphicsItem *blockItem = new QGraphicsPixmapItem(QPixmap::fromImage(blockImage));
-        blockItem->setPos((i % (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK, (i / (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK);
-        roomEditorGraphicsScene->addItem(blockItem);
+        QGraphicsPixmapItem *blockPixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(blockImage));
+        int xPos = (i % (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK;
+        int yPos = (i / (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK;
+        blockPixmapItem->setPos(xPos, yPos);
+        roomEditorGraphicsScene->addItem(blockPixmapItem);
     }
     
     // Populate tile layer 1 graphics
@@ -134,83 +166,133 @@ void RoomEditor::PopulateRoomEditor()
         //layer1Group->addToGroup(text);
 
         // Draw block
-        int sheet = curBlock.PatternByte % 4;
-        QImage blockImage = currentBlockImages[curBlock.BlockId + (0x100 * sheet)];
+        QImage blockImage = GetImageForBlock(curBlock.BlockNum, GlobalTileTables[currentRoom.States[0].GraphicSet], GlobalTileGraphics[currentRoom.States[0].GraphicSet]);
 
-        uchar orientation = (curBlock.PatternByte % 16) / 4;
-        bool xFlip = ((orientation & 1) > 0);
-        bool yFlip = ((orientation & 2) > 0);
+        // Generate a color table from the palette
+        QList<QRgb> paletteColorTable;
+        for (int palNum = 0; palNum < GlobalPalettes[tilesetId].size(); ++palNum)
+        {
+            // Mask out the alpha for the first color in each bank, it's intended to be transparent
+            QRgb color = SnesToPcColor(GlobalPalettes[tilesetId][palNum]);
+            if (palNum % 16 == 0)
+                paletteColorTable.append(color & 0x00FFFFFF);
+            else
+                paletteColorTable.append(color);
+        }
+        
+        // Apply the color table to the image
+        blockImage.setColorTable(paletteColorTable);
+        
+        // Adjust x/y flipping
+        blockImage = blockImage.mirrored(curBlock.XFlip, curBlock.YFlip);
 
-        blockImage = blockImage.mirrored(xFlip, yFlip);
-
-        QGraphicsItem *blockItem = new QGraphicsPixmapItem(QPixmap::fromImage(blockImage));
-        blockItem->setPos((i % (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK, (i / (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK);
-        roomEditorGraphicsScene->addItem(blockItem);
+        QGraphicsPixmapItem *blockPixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(blockImage));
+        int xPos = (i % (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK;
+        int yPos = (i / (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK;
+        blockPixmapItem->setPos(xPos, yPos);
+        roomEditorGraphicsScene->addItem(blockPixmapItem);
     }
 }
 
 void RoomEditor::PopulateBlockPicker()
 {
-    int tilesetId = currentRoom.States.at(0).GraphicSet;    // TEMPORARY
+    int tilesetId = currentRoom.States.at(0).GraphicSet;    // TEMPORARY, GET THIS FROM CURRENT ROOM STATE INSTEAD!
     QImage decodedTileGraphics = GlobalTileGraphics[tilesetId];
     
-    /*
     // DEBUGGING ONLY!!!
     // Apply a temporary grayscale palette to the indexed pixel data
-    QVector<QRgb> grayscaleColorTable;
-    for (int i = 0; i < 16; ++i)
-    {
-        int brightness = 16 * i;
-        if (brightness > 255)
-            brightness = 255;
-        uint color = (0xFF << 24) | (brightness << 16) | (brightness << 8) | brightness;
-        grayscaleColorTable.append(QRgb(color));
-    }
-    decodedTileGraphics.setColorTable(grayscaleColorTable);
-
-    QImage converted = decodedTileGraphics.convertToFormat(QImage::Format_RGB32);
-    converted.save("decodedTileGraphicsCppDebug.png");
-    */
+    //QVector<QRgb> grayscaleColorTable;
+    //for (int i = 0; i < 16; ++i)
+    //{
+    //    int brightness = 16 * i;
+    //    if (brightness > 255)
+    //        brightness = 255;
+    //    uint color = (0xFF << 24) | (brightness << 16) | (brightness << 8) | brightness;
+    //    grayscaleColorTable.append(QRgb(color));
+    //}
+    //decodedTileGraphics.setColorTable(grayscaleColorTable);
+    //QImage converted = decodedTileGraphics.convertToFormat(QImage::Format_RGB32);
+    //converted.save("decodedTileGraphicsCppDebug.png");
 
     // Generate a color table from the palette
-    QVector<QRgb> paletteColorTable;
+    QList<QRgb> paletteColorTable;
     for (int palNum = 0; palNum < GlobalPalettes[tilesetId].size(); ++palNum)
     {
-        // Mask out the first color in the each bank, it's intended to be transparent
+        // Mask out the alpha for the first color in each bank, it's intended to be transparent
+        QRgb color = SnesToPcColor(GlobalPalettes[tilesetId][palNum]);
         if (palNum % 16 == 0)
-            paletteColorTable.append(QRgb(0x00000000));
+            paletteColorTable.append(color & 0x00FFFFFF);
         else
-            paletteColorTable.append(SnesToPcColor(GlobalPalettes[tilesetId][palNum]));
+            paletteColorTable.append(color);
     }
     
     // Apply the color table to the image
-    decodedTileGraphics.setColorTable(paletteColorTable);
+    //decodedTileGraphics.setColorTable(paletteColorTable);
     
     // Reset the block picker & re-initialize graphics items
-    currentBlockImages.clear();
     blockPickerGraphicsScene->clear();
     int blockCount = 1024;
-    int blocksWide = 32;  // number of blocks per line
+    int blocksWide = 32;    // number of blocks per line
     int blocksTall = blockCount / blocksWide;
     blockPickerGraphicsScene->setSceneRect(0, 0, blocksWide * PIXELS_PER_BLOCK, blocksTall * PIXELS_PER_BLOCK);
     for (int blockNum = 0; blockNum < blockCount; ++blockNum)
     {
-        // Get block image and cache it
+        // Get block image
         QImage blockImage = GetImageForBlock(blockNum, GlobalTileTables[tilesetId], decodedTileGraphics);
         blockImage.setColorTable(paletteColorTable);
-        currentBlockImages.append(blockImage);
 
         // Draw the block to the picker scene
         QGraphicsPixmapItem *blockItem = blockPickerGraphicsScene->addPixmap(QPixmap::fromImage(blockImage));
-        blockItem->setPos((blockNum % blocksWide) * PIXELS_PER_BLOCK, (blockNum / blocksWide) * PIXELS_PER_BLOCK);
+        int xPos = (blockNum % blocksWide) * PIXELS_PER_BLOCK;
+        int yPos = (blockNum / blocksWide) * PIXELS_PER_BLOCK;
+        blockItem->setPos(xPos, yPos);
 
         // DEBUGGING ONLY!!!
         //QGraphicsTextItem *text = blockPickerScene->addText(QString::number(blockNum, 16).toUpper());
         //text->setFont(QFont("Noto Mono", 8));
         //text->setDefaultTextColor(QColor(Qt::red));
         //text->setPos((blockNum % blockPickerWidth) * PIXELS_PER_BLOCK - 4, (blockNum / blockPickerWidth) * PIXELS_PER_BLOCK);
-
         //convertedBlockImage.save("block" + QString::number(blockNum) + ".png");
+    }
+}
+
+void RoomEditor::PopulateBlockPickerDEBUG()
+{
+    // Load the current room's tile set from the 0th room state
+    int tilesetNum = currentRoom.States.at(0).GraphicSet;    // TEMPORARY, GET THIS FROM CURRENT ROOM STATE INSTEAD!
+    QImage currentTileGraphics = GlobalTileGraphics[tilesetNum];
+    
+    // Load the appropriate color palette from the 0th room state
+    QList<QRgb> paletteColorTable;
+    for (int paletteNum = 0; paletteNum < GlobalPalettes[tilesetNum].size(); ++paletteNum)
+    {
+        // Mask out the alpha for the first color in each bank, it's intended to be transparent
+        QRgb color = SnesToPcColor(GlobalPalettes[tilesetNum][paletteNum]);
+        if (paletteNum % 16 == 0)
+            paletteColorTable.append(color & 0x00FFFFFF);
+        else
+            paletteColorTable.append(color);
+    }
+    
+    // Apply the color table to the image
+    currentTileGraphics.setColorTable(paletteColorTable);
+    
+    // Reset the block picker scene and start painting the tile graphics to it
+    blockPickerGraphicsScene->clear();
+    int tileCount = currentTileGraphics.height() / PIXELS_PER_TILE;
+    int tilesWide = 16; // Number of tiles per line
+    int tilesTall = tileCount / tilesWide;
+    blockPickerGraphicsScene->setSceneRect(0, 0, tilesWide * PIXELS_PER_TILE, tilesTall * PIXELS_PER_TILE);
+    for (int tileNum = 0; tileNum < tileCount; ++tileNum)
+    {
+        // Get the tile image
+        QImage tileImage = GetImageForTile(tileNum, currentTileGraphics);
+        
+        // Draw the tile image
+        QGraphicsPixmapItem *tilePixmapItem = blockPickerGraphicsScene->addPixmap(QPixmap::fromImage(tileImage));
+        int xPos = (tileNum % tilesWide) * PIXELS_PER_TILE;
+        int yPos = (tileNum / tilesWide) * PIXELS_PER_TILE;
+        tilePixmapItem->setPos(xPos, yPos);
     }
 }
 
@@ -224,4 +306,13 @@ void RoomEditor::roomInfoAddressComboBox_currentIndexChanged(int index)
     currentRoom = GlobalRooms.values().at(index);
     PopulateBlockPicker();
     PopulateRoomEditor();
+}
+
+void RoomEditor::zoomSlider_valueChanged(int value)
+{
+    QTransform roomEditorTransform;
+    qreal zoomFactor = value / 100.0f;
+    roomEditorTransform.scale(zoomFactor, zoomFactor);
+    
+    roomEditorGraphicsView->setTransform(roomEditorTransform);
 }
