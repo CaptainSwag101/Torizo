@@ -50,7 +50,7 @@ private:
     QImage loadedTileGraphics;
     QList<QRgb> loadedPalette;
     QList<OAMSprite> Sprites;
-    constexpr static int TILE_GRAPHICS_SIZE = 256;
+    constexpr static int TILE_GRAPHICS_SIZE = 8192;
 };
 
 #endif // OAM_SPRITE_CREATOR_H

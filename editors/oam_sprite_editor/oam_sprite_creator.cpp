@@ -43,8 +43,6 @@ void OAMSpriteCreator::on_loadTileGFXButton_clicked()
     
     if (!ok) return;
     
-    tilePickerScene->clear();
-    
     QByteArray tileGfxData = ROMData.mid(tileGfxAddress, TILE_GRAPHICS_SIZE);
     loadedTileGraphics = DecodeBitplaneGraphics(tileGfxData, 4);
     
@@ -53,10 +51,29 @@ void OAMSpriteCreator::on_loadTileGFXButton_clicked()
     {
         loadedTileGraphics.setColorTable(loadedPalette);
     }
+    else
+    {
+        // Apply a temporary grayscale palette to the indexed pixel data
+        QList<QRgb> grayscaleColorTable;
+        for (int i = 0; i < 16; ++i)
+        {
+            int brightness = 16 * i;
+            if (brightness > 255)
+                brightness = 255;
+            uint color = (0xFF << 24) | (brightness << 16) | (brightness << 8) | brightness;
+            grayscaleColorTable.append(QRgb(color));
+        }
+        loadedTileGraphics.setColorTable(grayscaleColorTable);
+    }
     
     // Add the tile graphics to the tile picker scene
+    tilePickerScene->clear();
     int tileCount = loadedTileGraphics.height() / PIXELS_PER_TILE;
     int tilesPerRow = 16;
+    tilePickerScene->setSceneRect(0, 0, tilesPerRow * PIXELS_PER_TILE, tilesPerRow * PIXELS_PER_TILE);
+    QTransform transform;
+    transform.scale(2, 2);
+    ui->tilePickerGraphicsView->setTransform(transform);
     for (int tileNum = 0; tileNum < tileCount; ++tileNum)
     {
         int xPos = (tileNum % tilesPerRow) * PIXELS_PER_TILE;
