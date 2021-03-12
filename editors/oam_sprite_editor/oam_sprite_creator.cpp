@@ -41,7 +41,7 @@ void OAMSpriteCreator::on_loadTileGFXButton_clicked()
     // Load as hexadecimal
     int tileGfxAddress = ui->tileGFXAddressInput->text().toInt(&ok, 16);
     
-    if (!ok) return;
+    if (!ok || (tileGfxAddress + TILE_GRAPHICS_SIZE) > ROMData.size()) return;
     
     QByteArray tileGfxData = ROMData.mid(tileGfxAddress, TILE_GRAPHICS_SIZE);
     loadedTileGraphics = DecodeBitplaneGraphics(tileGfxData, 4);
@@ -87,5 +87,40 @@ void OAMSpriteCreator::on_loadTileGFXButton_clicked()
 
 void OAMSpriteCreator::on_loadPaletteButton_clicked()
 {
+    // First, load the address from the user input field, provided it's valid
+    bool ok;
     
+    // Load as hexadecimal
+    int paletteAddress = ui->paletteAddressInput->text().toInt(&ok, 16);
+    
+    if (!ok || paletteAddress >= ROMData.size()) return;
+    
+    // Load at most the uncompressed size of a 16-color palette
+    //QByteArray compressedPaletteData = ROMData.mid(paletteAddress);  
+    //QByteArray decompressedPaletteData = DecompressData(compressedPaletteData);
+    QByteArray decompressedPaletteData = ROMData.mid(paletteAddress, DECOMPRESSED_PALETTE_DATA_SIZE);
+    QDataStream paletteStream(decompressedPaletteData);
+    paletteStream.setByteOrder(QDataStream::LittleEndian);
+    
+    // Read the SNES colors
+    int colorCount = decompressedPaletteData.size() / 2;
+    QList<ushort> snesPalette;
+    for (int c = 0; c < colorCount; ++c)
+    {
+        ushort snesColor;
+        paletteStream >> snesColor;
+        
+        snesPalette.append(snesColor);
+    }
+    
+    // Clear the old palette
+    loadedPalette.clear();
+    
+    // Convert the SNES colors to PC RGB
+    for (int c = 0; c < snesPalette.size(); ++c)
+    {
+        QRgb pcColor = SnesToPcColor(snesPalette[c]);
+        
+        loadedPalette.append(pcColor);
+    }
 }
