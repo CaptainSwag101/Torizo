@@ -9,6 +9,7 @@
 
 #include <QtGlobal>
 #include <QImage>
+#include <QPainter>
 
 void LoadTilesets();
 

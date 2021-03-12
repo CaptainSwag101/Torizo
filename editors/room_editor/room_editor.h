@@ -1,10 +1,10 @@
 #ifndef ROOMEDITOR_H
 #define ROOMEDITOR_H
 
-#include "../globals/graphics_constants.h"
-#include "../globals/rom_constants.h"
-#include "../globals/rom_variables.h"
-#include "../rom_utils/tileset.h"
+#include "../../globals/graphics_constants.h"
+#include "../../globals/rom_constants.h"
+#include "../../globals/rom_variables.h"
+#include "../../rom_utils/tileset.h"
 
 #include <QMainWindow>
 #include <QBrush>
@@ -12,10 +12,14 @@
 #include <QComboBox>
 #include <QDockWidget>
 #include <QFormLayout>
-#include <QGraphicsView>
-#include <QGraphicsScene>
+#include <QGraphicsItem>
 #include <QGraphicsPixmapItem>
+#include <QGraphicsScene>
+#include <QGraphicsSceneMouseEvent>
+#include <QGraphicsView>
 #include <QImage>
+#include <QMouseEvent>
+#include <QPointF>
 #include <QRgb>
 #include <QSlider>
 
@@ -31,6 +35,7 @@ public:
     /* Methods */
     RoomEditor(QWidget *parent = nullptr);
     ~RoomEditor();
+    
     /* Variables */
     Room currentRoom;
     LevelData currentLevelData;
@@ -46,16 +51,19 @@ private:
     void InitBlockPicker();
     void InitRoomInfo();
     void InitStatusBar();
-    void PopulateRoomEditor();
+    void PopulateRoomViewer();
     void PopulateBlockPicker();
     void PopulateBlockPickerDEBUG();
+    void ChangeRoom();
+    // Event filters
+    bool eventFilter(QObject *target, QEvent *event);
     
     /* Variables */
     // UI stuff
     Ui::RoomEditor *ui;
     // Room Editor area
-    QGraphicsView *roomEditorGraphicsView;
-    QGraphicsScene *roomEditorGraphicsScene;
+    QGraphicsView *roomViewerGraphicsView;
+    QGraphicsScene *roomViewerGraphicsScene;
     // Block Picker area
     QDockWidget *blockPickerDockWidget;
     QGraphicsView *blockPickerGraphicsView;
@@ -66,6 +74,5 @@ private:
     QComboBox *roomInfoStateComboBox;
     // Status bar area
     QSlider *zoomSlider;
-    
 };
 #endif // ROOMEDITOR_H

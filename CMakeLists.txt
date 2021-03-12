@@ -24,12 +24,13 @@ set(PROJECT_SOURCES
         mainwindow.ui
         
         # Editors
-        editors/room_editor.cpp
-        editors/room_editor.h
-        editors/room_editor.ui
-        editors/tileset_viewer.cpp
-        editors/tileset_viewer.h
-        editors/tileset_viewer.ui
+        editors/room_editor/room_editor.cpp
+        editors/room_editor/room_editor.h
+        editors/room_editor/room_editor.ui
+        editors/oam_sprite_editor/oam_sprite_creator.cpp
+        editors/oam_sprite_editor/oam_sprite_creator.h
+        editors/oam_sprite_editor/oam_sprite_creator.ui
+        editors/oam_sprite_editor/oam_sprite.h
         
         # Globals
         globals/graphics_constants.h

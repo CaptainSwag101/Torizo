@@ -16,8 +16,11 @@ RoomEditor::RoomEditor(QWidget *parent) : QMainWindow(parent), ui(new Ui::RoomEd
     // starting room and state, which PopulateBlockPicker uses to
     // populate its tileset and block graphics, which PopulateRoomEditor uses
     // to populate the graphics for the loaded room data.
-    PopulateBlockPicker();
-    PopulateRoomEditor();
+    ChangeRoom();
+    
+    // Install the event filters after our init and first population are completed
+    roomViewerGraphicsScene->installEventFilter(this);
+    blockPickerGraphicsScene->installEventFilter(this);
 }
 
 RoomEditor::~RoomEditor()
@@ -28,11 +31,11 @@ RoomEditor::~RoomEditor()
 /// Initialize Room Editor UI elements.
 void RoomEditor::InitRoomEditor()
 {
-    roomEditorGraphicsScene = new QGraphicsScene();
-    roomEditorGraphicsScene->setBackgroundBrush(QBrush(Qt::black));
-    roomEditorGraphicsView = new QGraphicsView(roomEditorGraphicsScene);
+    roomViewerGraphicsScene = new QGraphicsScene();
+    roomViewerGraphicsScene->setBackgroundBrush(QBrush(Qt::black));
+    roomViewerGraphicsView = new QGraphicsView(roomViewerGraphicsScene);
     
-    setCentralWidget(roomEditorGraphicsView);
+    setCentralWidget(roomViewerGraphicsView);
 }
 
 /// Initialize Block Picker UI elements.
@@ -103,14 +106,11 @@ void RoomEditor::InitStatusBar()
     ui->statusbar->addWidget(zoomSlider);
 }
 
-void RoomEditor::PopulateRoomEditor()
+void RoomEditor::PopulateRoomViewer()
 {
-    // Clear out any leftover room data if we had a different one loaded
-    roomEditorGraphicsScene->clear();
-    roomEditorGraphicsView->update();
+    // Clear the old graphics from RoomViewerGraphicsScene
+    roomViewerGraphicsScene->clear();
     
-    // Load the current state's LevelData into memory
-    currentLevelData = ReadLevel(currentRoom, 0);   // TEMPORARY, GET THIS FROM CURRENT ROOM STATE INSTEAD!
     int tilesetId = currentRoom.States[0].GraphicSet;
     
     ////// Populate the Room Editor with the current room's blocks //////
@@ -151,7 +151,7 @@ void RoomEditor::PopulateRoomEditor()
         int xPos = (i % (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK;
         int yPos = (i / (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK;
         blockPixmapItem->setPos(xPos, yPos);
-        roomEditorGraphicsScene->addItem(blockPixmapItem);
+        roomViewerGraphicsScene->addItem(blockPixmapItem);
     }
     
     // Populate tile layer 1 graphics
@@ -190,8 +190,10 @@ void RoomEditor::PopulateRoomEditor()
         int xPos = (i % (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK;
         int yPos = (i / (BLOCKS_PER_ROOM_SEGMENT * currentRoom.Header.Width)) * PIXELS_PER_BLOCK;
         blockPixmapItem->setPos(xPos, yPos);
-        roomEditorGraphicsScene->addItem(blockPixmapItem);
+        roomViewerGraphicsScene->addItem(blockPixmapItem);
     }
+    
+    //roomViewerGraphicsScene->update();
 }
 
 void RoomEditor::PopulateBlockPicker()
@@ -248,7 +250,7 @@ void RoomEditor::PopulateBlockPicker()
         blockItem->setPos(xPos, yPos);
 
         // DEBUGGING ONLY!!!
-        //QGraphicsTextItem *text = blockPickerScene->addText(QString::number(blockNum, 16).toUpper());
+        //QGraphicsTextItem *text = blockPickerGraphicsScene->addText(QString::number(blockNum, 16).toUpper());
         //text->setFont(QFont("Noto Mono", 8));
         //text->setDefaultTextColor(QColor(Qt::red));
         //text->setPos((blockNum % blockPickerWidth) * PIXELS_PER_BLOCK - 4, (blockNum / blockPickerWidth) * PIXELS_PER_BLOCK);
@@ -296,6 +298,15 @@ void RoomEditor::PopulateBlockPickerDEBUG()
     }
 }
 
+void RoomEditor::ChangeRoom()
+{
+    // Load the current state's LevelData into memory
+    currentLevelData = ReadLevel(currentRoom, 0);   // TEMPORARY, GET THIS FROM CURRENT ROOM STATE INSTEAD!
+    
+    PopulateBlockPicker();
+    PopulateRoomViewer();
+}
+
 void RoomEditor::roomInfoAddressComboBox_currentIndexChanged(int index)
 {
     // Don't try to access an invalid room index
@@ -304,8 +315,7 @@ void RoomEditor::roomInfoAddressComboBox_currentIndexChanged(int index)
     
     // Trigger the UI elements to repopulate
     currentRoom = GlobalRooms.values().at(index);
-    PopulateBlockPicker();
-    PopulateRoomEditor();
+    ChangeRoom();
 }
 
 void RoomEditor::zoomSlider_valueChanged(int value)
@@ -314,5 +324,46 @@ void RoomEditor::zoomSlider_valueChanged(int value)
     qreal zoomFactor = value / 100.0f;
     roomEditorTransform.scale(zoomFactor, zoomFactor);
     
-    roomEditorGraphicsView->setTransform(roomEditorTransform);
+    roomViewerGraphicsView->setTransform(roomEditorTransform);
+}
+
+bool RoomEditor::eventFilter(QObject *target, QEvent *event)
+{
+    if (event->type() == QEvent::GraphicsSceneMousePress)
+    {
+        QGraphicsSceneMouseEvent *mouseEvent = static_cast<QGraphicsSceneMouseEvent *>(event);
+        
+        // Determine which QGraphicsScene object the click took place over
+        if (target == (QObject *)roomViewerGraphicsScene)
+        {
+            QGraphicsItem *item = roomViewerGraphicsScene->itemAt(mouseEvent->scenePos(), QTransform());
+            QPoint sceneBlockPos = mouseEvent->scenePos().toPoint();
+            QPoint roomBlockPos = QPoint(sceneBlockPos.x() / PIXELS_PER_BLOCK, sceneBlockPos.y() / PIXELS_PER_BLOCK);
+            
+            // If we're left-clicking, replace the block in Layer 1
+            if (mouseEvent->button() == Qt::LeftButton)
+            {
+                int blockIndex = (roomBlockPos.y() * currentRoom.Header.Width * BLOCKS_PER_ROOM_SEGMENT) + roomBlockPos.x();
+                
+                Block b;
+                b.BlockNum = 0;
+                b.XFlip = false;
+                b.YFlip = false;
+                b.BlockType = 0;
+                currentLevelData.TileLayer1[blockIndex] = b;
+                
+            }
+            
+            PopulateRoomViewer();
+            return true;
+        }
+        else if (target == (QObject *)blockPickerGraphicsScene)
+        {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    return false;
 }

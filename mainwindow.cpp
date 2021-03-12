@@ -1,7 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "editors/room_editor.h"
+#include "editors/oam_sprite_editor/oam_sprite_creator.h"
+#include "editors/room_editor/room_editor.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -31,6 +32,23 @@ void MainWindow::on_roomEditorButton_clicked()
     }
     
     std::shared_ptr<RoomEditor> editorPtr = std::make_shared<RoomEditor>(this);
+    activeEditors.append(editorPtr);
+    editorPtr.get()->show();
+}
+
+void MainWindow::on_oamSpriteCreatorButton_clicked()
+{
+    // First, check to make sure OAMSpriteCreator isn't already open
+    for (std::shared_ptr<QWidget> &editorPtr : activeEditors)
+    {
+        if (editorPtr.get()->windowTitle() == tr("OAM Sprite Creator"))
+        {
+            editorPtr.get()->show();
+            return;
+        }
+    }
+    
+    std::shared_ptr<OAMSpriteCreator> editorPtr = std::make_shared<OAMSpriteCreator>(this);
     activeEditors.append(editorPtr);
     editorPtr.get()->show();
 }
@@ -82,4 +100,5 @@ void MainWindow::OpenROM(QString romPath)
     
     // Enable editor buttons once a ROM is loaded
     ui->roomEditorButton->setEnabled(true);
+    ui->oamSpriteCreatorButton->setEnabled(true);
 }

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>200</width>
-    <height>100</height>
+    <height>137</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -34,6 +34,22 @@
     </property>
     <property name="text">
      <string>Room Editor</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="oamSpriteCreatorButton">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>181</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>OAM Sprite Creator</string>
     </property>
    </widget>
   </widget>

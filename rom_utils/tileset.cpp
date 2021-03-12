@@ -173,7 +173,7 @@ QList<ushort> GetTileTableEntry(int blockId, QByteArray tileTable)
     {
         int offset = ((blockId & 0x3FF) * 8) + (i * 2);
         if (offset >= tileTable.size() || offset + 1 >= tileTable.size())
-            return entry;
+            return entry;   // If this is hit, we either have an invalid tile table, or something went wrong during decompression
 
         uchar b1 = tileTable[offset];
         uchar b2 = tileTable[offset + 1];
@@ -205,7 +205,7 @@ QImage GetImageForBlock(int blockNum, QByteArray tileTable, QImage tileGraphics)
         bool yFlip = ((tileData) >> 15) & 1;
         uchar paletteBank = (uchar)(tileData >> 10) & 7;
 
-        QImage tileImage = tileGraphics.copy(0, PIXELS_PER_TILE * tileNum, PIXELS_PER_TILE, PIXELS_PER_TILE);
+        QImage tileImage = GetImageForTile(tileNum, tileGraphics);
         tileImage = tileImage.mirrored(xFlip, yFlip);
 
         for (int y = 0; y < PIXELS_PER_TILE; ++y)

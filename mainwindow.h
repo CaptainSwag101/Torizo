@@ -25,6 +25,7 @@ public:
     
 private slots:
     void on_roomEditorButton_clicked();
+    void on_oamSpriteCreatorButton_clicked();
     void on_action_Open_ROM_triggered();
     
 private:
