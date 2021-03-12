@@ -121,6 +121,14 @@ void OAMSpriteCreator::on_loadPaletteButton_clicked()
     {
         QRgb pcColor = SnesToPcColor(snesPalette[c]);
         
+        // Mask out transparency for the first color in each 16-color page
+        if (c % 16 == 0)
+        {
+            pcColor = pcColor & 0x00FFFFFF;
+        }
+        
         loadedPalette.append(pcColor);
     }
+    
+    on_loadTileGFXButton_clicked();
 }
