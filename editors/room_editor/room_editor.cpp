@@ -110,6 +110,9 @@ void RoomEditor::PopulateRoomViewer()
 {
     // Clear the old graphics from RoomViewerGraphicsScene
     roomViewerGraphicsScene->clear();
+
+    // Resize the graphicsScene to the size of the new room
+    roomViewerGraphicsScene->setSceneRect(0, 0, (BLOCKS_PER_ROOM_SEGMENT * PIXELS_PER_BLOCK * currentRoom.Header.Width), (BLOCKS_PER_ROOM_SEGMENT * PIXELS_PER_BLOCK * currentRoom.Header.Height));
     
     int tilesetId = currentRoom.States[0].GraphicSet;
     
