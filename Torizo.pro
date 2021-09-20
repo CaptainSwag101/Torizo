@@ -9,13 +9,32 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    editors/oam_sprite_editor/oam_sprite_creator.cpp \
+    editors/room_editor/room_editor.cpp \
+    globals/rom_variables.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    rom_utils/bankedaddress.cpp \
+    rom_utils/compression.cpp \
+    rom_utils/room.cpp \
+    rom_utils/tileset.cpp
 
 HEADERS += \
-    mainwindow.h
+    editors/oam_sprite_editor/oam_sprite.h \
+    editors/oam_sprite_editor/oam_sprite_creator.h \
+    editors/room_editor/room_editor.h \
+    globals/graphics_constants.h \
+    globals/rom_constants.h \
+    globals/rom_variables.h \
+    mainwindow.h \
+    rom_utils/bankedaddress.h \
+    rom_utils/compression.h \
+    rom_utils/room.h \
+    rom_utils/tileset.h
 
 FORMS += \
+    editors/oam_sprite_editor/oam_sprite_creator.ui \
+    editors/room_editor/room_editor.ui \
     mainwindow.ui
 
 TRANSLATIONS += \
