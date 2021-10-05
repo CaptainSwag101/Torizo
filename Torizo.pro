@@ -10,9 +10,9 @@ CONFIG += c++17
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp \
-    editors/oam_sprite_editor/oam_sprite_creator.cpp \
-    editors/room_editor/room_editor.cpp \
+    forms/mainwindow.cpp \
+    forms/editors/oam_sprite_editor/oam_sprite_creator.cpp \
+    forms/editors/room_editor/room_editor.cpp \
     globals/rom_variables.cpp \
     rom_utils/bankedaddress.cpp \
     rom_utils/compression.cpp \
@@ -20,10 +20,10 @@ SOURCES += \
     rom_utils/tileset.cpp
 
 HEADERS += \
-    mainwindow.h \
-    editors/oam_sprite_editor/oam_sprite.h \
-    editors/oam_sprite_editor/oam_sprite_creator.h \
-    editors/room_editor/room_editor.h \
+    forms/mainwindow.h \
+    forms/editors/oam_sprite_editor/oam_sprite.h \
+    forms/editors/oam_sprite_editor/oam_sprite_creator.h \
+    forms/editors/room_editor/room_editor.h \
     globals/graphics_constants.h \
     globals/rom_constants.h \
     globals/rom_variables.h \
@@ -33,9 +33,9 @@ HEADERS += \
     rom_utils/tileset.h
 
 FORMS += \
-    mainwindow.ui \
-    editors/oam_sprite_editor/oam_sprite_creator.ui \
-    editors/room_editor/room_editor.ui
+    forms/mainwindow.ui \
+    forms/editors/oam_sprite_editor/oam_sprite_creator.ui \
+    forms/editors/room_editor/room_editor.ui
 
 TRANSLATIONS += \
     Torizo_en_US.ts

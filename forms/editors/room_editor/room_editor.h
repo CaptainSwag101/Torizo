@@ -1,10 +1,10 @@
 #ifndef ROOMEDITOR_H
 #define ROOMEDITOR_H
 
-#include "../../globals/graphics_constants.h"
-#include "../../globals/rom_constants.h"
-#include "../../globals/rom_variables.h"
-#include "../../rom_utils/tileset.h"
+#include "../../../globals/graphics_constants.h"
+#include "../../../globals/rom_constants.h"
+#include "../../../globals/rom_variables.h"
+#include "../../../rom_utils/tileset.h"
 
 #include <QMainWindow>
 #include <QBrush>

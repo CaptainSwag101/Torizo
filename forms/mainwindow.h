@@ -1,12 +1,12 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "rom_utils/tileset.h"
+#include "../rom_utils/tileset.h"
 
 #include <QMainWindow>
 #include <QFile>
 #include <QFileDialog>
-#include <QList>
+#include <QHash>
 #include <QMessageBox>
 #include <QWidget>
 
@@ -30,7 +30,7 @@ private slots:
     
 private:
     Ui::MainWindow *ui;
-    QList<std::shared_ptr<QWidget>> activeEditors;
+    QHash<QPushButton*, std::shared_ptr<QWidget>> activeEditors;  // Button clicked paired with form
 };
 
 #endif // MAINWINDOW_H

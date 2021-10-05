@@ -22,35 +22,33 @@ MainWindow::~MainWindow()
 void MainWindow::on_roomEditorButton_clicked()
 {
     // First, check to make sure RoomEditor isn't already open
-    for (std::shared_ptr<QWidget> &editorPtr : activeEditors)
+    if (activeEditors.contains(ui->roomEditorButton))
     {
-        if (editorPtr.get()->windowTitle() == tr("Room Editor"))
+        if (activeEditors[ui->roomEditorButton])
         {
-            editorPtr.get()->show();
+            activeEditors[ui->roomEditorButton].get()->showNormal();
             return;
         }
     }
-    
-    std::shared_ptr<RoomEditor> editorPtr = std::make_shared<RoomEditor>(this);
-    activeEditors.append(editorPtr);
-    editorPtr.get()->show();
+
+    activeEditors.insert(ui->roomEditorButton, std::make_shared<RoomEditor>(this));
+    activeEditors[ui->roomEditorButton].get()->show();
 }
 
 void MainWindow::on_oamSpriteCreatorButton_clicked()
 {
     // First, check to make sure OAMSpriteCreator isn't already open
-    for (std::shared_ptr<QWidget> &editorPtr : activeEditors)
+    if (activeEditors.contains(ui->oamSpriteCreatorButton))
     {
-        if (editorPtr.get()->windowTitle() == tr("OAM Sprite Creator"))
+        if (activeEditors[ui->oamSpriteCreatorButton])
         {
-            editorPtr.get()->show();
+            activeEditors[ui->oamSpriteCreatorButton].get()->showNormal();
             return;
         }
     }
-    
-    std::shared_ptr<OAMSpriteCreator> editorPtr = std::make_shared<OAMSpriteCreator>(this);
-    activeEditors.append(editorPtr);
-    editorPtr.get()->show();
+
+    activeEditors.insert(ui->oamSpriteCreatorButton, std::make_shared<OAMSpriteCreator>(this));
+    activeEditors[ui->oamSpriteCreatorButton].get()->show();
 }
 
 void MainWindow::on_action_Open_ROM_triggered()
