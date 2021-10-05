@@ -95,13 +95,12 @@ void RoomEditor::InitStatusBar()
 {
     zoomSlider = new QSlider();
     zoomSlider->setOrientation(Qt::Horizontal);
-    zoomSlider->setTickInterval(100);
+    zoomSlider->setTickInterval(1);
     zoomSlider->setTickPosition(QSlider::TicksBelow);
-    zoomSlider->setMinimum(100);
-    zoomSlider->setMaximum(400);
-    zoomSlider->setValue(100);
-    zoomSlider->setSingleStep(100);
-    zoomSlider->setPageStep(200);
+    zoomSlider->setRange(1,4);
+    zoomSlider->setValue(1);
+    zoomSlider->setSingleStep(1);
+    zoomSlider->setPageStep(2);
     connect(zoomSlider, &QSlider::valueChanged, this, &RoomEditor::zoomSlider_valueChanged);
     ui->statusbar->addWidget(zoomSlider);
 }
@@ -324,7 +323,7 @@ void RoomEditor::roomInfoAddressComboBox_currentIndexChanged(int index)
 void RoomEditor::zoomSlider_valueChanged(int value)
 {
     QTransform roomEditorTransform;
-    qreal zoomFactor = value / 100.0f;
+    qreal zoomFactor = value * 1.0f;
     roomEditorTransform.scale(zoomFactor, zoomFactor);
     
     roomViewerGraphicsView->setTransform(roomEditorTransform);

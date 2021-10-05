@@ -23,9 +23,9 @@
 #include <QRgb>
 #include <QSlider>
 
-QT_BEGIN_NAMESPACE
-namespace Ui { class RoomEditor; }
-QT_END_NAMESPACE
+namespace Ui {
+class RoomEditor;
+}
 
 class RoomEditor : public QMainWindow
 {
